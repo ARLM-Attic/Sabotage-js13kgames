@@ -1,0 +1,571 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8" /></head><body><div style="width: 640px; height: 480px; margin: 0 auto;"><canvas width="640" height="480" style="background: #3d3d3d;"></canvas>  </div><script src="kM.js"></script><script>
+//if i'm not describing particular varibles that means they're useless or rarely used and not important in mechanics
+// or just designed for handle timeouts, freezes etc
+// or i don't removed them because i'm not sure too what the fuck is going on here
+function GetRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+let kontra = Q; // I re-minified minified version of kontra and I replaced namespace kontra by Q in kontra.js
+kontra.init();
+let I = [0,0,0,0,0,0]; // tile images for renderer
+for(let i = 0; i< I.length; i++)
+{
+  I[i] = new Image();
+  if(i == 1 || i == 3 || i ==4)I[i].src = 's/tile'+i.toString()+'.png'; // load pngs for these elements
+}
+let si = [new Image(), new Image(), new Image()]; si[0].src='s/s.png';si[1].src='s/f.png';si[2].src='s/m.png';
+let ss =  kontra.sprite({
+            x: 160,    
+            y: 220,  
+            image:si[0]
+          });
+let fs = kontra.sprite({
+            x: 160,    
+            y: 220,  
+            image:si[1]
+          });         
+          let ms = kontra.sprite({x:180,y:220,image:si[2]});
+          //splash/failed/success screens setup
+let gS = 0; // gamestate : 0 splash, 1 game, >1 failed and success
+let levelMgr = {
+  levels : [
+  [1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 3, 3, 0, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 0, 3, 3, 1, 1, 1, 1, 3, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 4, 1, 1, 1, 4, 0, 1, 5, 5, 5, 5, 5, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 1, 4, 0, 5, 5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 1, 1, 1, 4, 4, 1, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 1, 1, 1, 1, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 1, 1, 1, 4, 4, 1, 1, 1, 5, 5, 5, 5, 5, 5, 5, 1, 1, 0, 4, 0, 1, 1, 4, 4, 4, 1, 1, 5, 5, 5, 5, 5, 5, 5, 5, 1, 1, 4, 4, 4, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 4, 0, 1, 1, 4, 1, 1, 4, 4, 1, 1, 5, 5, 5, 5, 5, 5, 5, 1, 0, 4, 0, 1, 1, 4, 4, 4, 4, 4, 0, 0, 1, 5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 1, 1, ],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 5, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 5, 5, 5, 1, 1, 1, 1, 1, 0, 4, 4, 1, 1, 4, 4, 0, 1, 1, 5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 0, 4, 1, 1, 1, 1, 4, 0, 1, 1, 1, 5, 5, 5, 5, 5, 5, 1, 1, 1, 0, 4, 1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 5, 5, 5, 5, 1, 1, 1, 1, 0, 4, 1, 1, 1, 1, 4, 0, 1, 1, 1, 5, 5, 5, 1, 1, 1, 1, 1, 1, 0, 4, 4, 1, 1, 4, 4, 0, 1, 1, 1, 1, 1, 5, 1, 1, 3, 0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 4, 1, 0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 4, 4, 1, 1, 0, 1, 1, 1, 1, 1, 4, 4, 1, 1, 1, 0, 3, 0, 1, 1, 4, 4, 0, 3, 0, 3, 1, 1, 1, 0, 4, 4, 0, 1, 1, 3, 4, 3, 1, 1, 4, 4, 1, 1, 0, 1, 1, 1, 4, 4, 1, 1, 4, 4, 1, 0, 3, 0, 1, 1, 4, 4, 1, 0, 3, 1, 1, 1, 4, 4, 1, 1, 4, 4, 1, 1, 1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, ],
+  [1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 4, 4, 1, 1, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 4, 4, 1, 1, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 0, 3, 0, 1, 1, 1, 0, 4, 5, 5, 4, 0, 1, 1, 0, 0, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1, 0, 4, 5, 5, 4, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 3, 0, 1, 1, 1, 0, 4, 5, 4, 4, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 5, 4, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 4, 1, 5, 5, 4, 0, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 5, 5, 4, 4, 1, 1, 1, 3, 1, 1, 4, 4, 4, 1, 1, 1, 1, 4, 4, 1, 5, 5, 5, 4, 0, 1, 1, 3, 1, 1, 0, 4, 0, 1, 1, 1, 1, 4, 4, 1, 5, 5, 5, 4, 4, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 5, 5, 5, 5, 4, 0, 1, 3, 1, 0, 4, 4, 0, 1, 1, 4, 4, 4, 1, 1, 5, 5, 5, 5, 4, 4, 0, 1, 1, 4, 4, 4, 4, 1, 0, 4, 1, 1, 1, 5, 5, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 5, 5, ],
+  
+  ], // tilemap setups for each level
+  ap : [[32, 384],[320, 384],[480, 320]], // antenna spawn points
+  aI : new Image(), // antenna image
+  a : null, // this will be antenna sprite 
+  f: 0, // if i'm not describing particular varibles that means they're useless or rarely used and not important in mechanics or just designed for handle timeouts, freezes etc
+  rs : 0,
+
+  c : 0,
+  nv : 0,
+  lN : function(p,r) // load next level - params: player reference, r - are we restarting level right now?
+  {
+    if(levelMgr.c <= levelMgr.levels.length-1)
+    {
+     // at first clear every array 
+      bd.splice(0,bd.length);
+      tileMgr.tiles.splice(0,tileMgr.tiles.length);
+    tileMgr.tileData.splice(0,tileMgr.tileData.length);
+    tileMgr.visible.splice(0,tileMgr.visible.length);
+     if(!r) levelMgr.c++; // if not restarting level load next one
+      tileMgr.fill(); // fill map with tiles
+      p.cId = 0; // restart player settings
+      player.sprite.x = 0;
+      player.sprite.y = 0;
+      levelMgr.f = 0; // reset lvlMgr finished flag
+    }
+    else
+    {
+      if(levelMgr.nv == 0)levelMgr.nv=setTimeout(function(){ad(0);gS=4;},1000); // if this was last level and finished - play success music
+    }
+  }
+};
+bu = function(c,px,py,d) // blood unit class
+{
+  // simple setup - sprite with random w/h and color, random target position
+  this.sp = kontra.sprite({x:px ,y:py,dx:0,width:GetRandomInt(6,14),height:GetRandomInt(6,14),color:bc[c]});
+  let mp = 1; 
+  if(GetRandomInt(0,2) == 1) mp =-1;
+  this.tx = px + mp*GetRandomInt(32,48);
+  if(GetRandomInt(0,2) == 1) mp =1;
+  this.ty = py + mp*GetRandomInt(32,48);
+  this.u = function()
+  {
+    if(this.sp.x < this.tx) this.sp.x += 2;
+    if(this.sp.y < this.ty) this.sp.y += 2;
+    // in this update func blood unit is going to reach target position - for blood-explosion-like effect
+  }
+}
+let bd = []; // array for blood units
+bc = ['#b7122b','#5b0613','#ea0211'] // blood colors
+function Abd(px,py,d)
+{
+  bd.push(new bu(GetRandomInt(0,2),px,py,d)); //simple function for adding blood unit with some coordinates and blood-explosion based on killed enemy direction
+}
+
+
+let tileMgr = { // object handling entire tilemap
+  tiles : [], // sprites of tiles
+  visible : [], // their visibility - this could be done better with just one additional variable in kontra.sprite setup but I didn't realized that when coded this
+  tileData : [], // information about which kind of tile is in tile[i] -- this also could be done better, look above
+  cl : ['#202e44','#8ea79f','#2d3a37','#265934'],
+  fill : function()
+  {
+    levelMgr.aI.src = 's/an.png';
+    levelMgr.a = kontra.sprite({x:levelMgr.ap[levelMgr.c][0] ,y:levelMgr.ap[levelMgr.c][1],dx:0,image: levelMgr.aI});
+    let px = 0; let py = 0;
+    //let rc = G(0,this.cl.length-1);
+    for(let i = 0, IX = 0; i< 15; i++, py +=32)
+    {
+      for(let j = 0; j < 20; j++, IX++, px += 32)
+      {
+        this.visible.push(0);
+        tileMgr.tileData[IX] = levelMgr.levels[levelMgr.c][IX];
+        if(tileMgr.tileData[IX] != 0 && tileMgr.tileData[IX] != 5)
+        {
+            tileMgr.tiles[IX] = kontra.sprite({
+            x: px,    
+            y: py,  
+            dx: 0,          
+            image: I[levelMgr.levels[levelMgr.c][IX]],
+          });
+          
+        }    
+        else
+        {
+          if(tileMgr.tileData[IX] == 0)
+          {
+            tileMgr.tiles[IX] = kontra.sprite({
+            x: px,    
+            y: py,  
+            dx: 0,       
+            width: 32,
+            height: 32,   
+            color: '#212121',
+          });
+          }
+          else
+          {
+            tileMgr.tiles[IX] = kontra.sprite({
+            x: px,    
+            y: py,  
+            dx: 0,  
+            width: 32,
+            height: 32,
+            color: '#41959a',
+          });
+          }
+        }  
+        if(tileMgr.tiles[IX].x == levelMgr.a.x && tileMgr.tiles[IX].y == levelMgr.a.y)this.visible[IX] = 1; 
+      }
+      px = 0;
+    }
+    let tx = player.rd.x;
+    let ty = player.rd.y;
+    for(let k = 0;k<16; k++)
+    {
+      player.rd.x = GetRandomInt(0,600);
+      player.rd.y = GetRandomInt(0,400);
+      for(let i = 0; i< tileMgr.tiles.length;i++)
+      {
+        if(tileMgr.tiles[i].collidesWith(player.rd))tileMgr.visible[i] = 1;
+      }
+    }
+    player.rd.x = tx;
+    player.rd.y = ty;
+    enMgr.add();
+  },
+  R : function()
+  {
+    for(let i = 0; i<tileMgr.tiles.length; i++)
+    {
+      if(this.visible[i])tileMgr.tiles[i].render();
+    }
+  }
+};
+
+let player = {
+  imgs : [],
+  visible : 0,
+  sprite : 0, // sprite of player
+  cf : 0,
+  cId : 0,  // current id - on which tile player is standing 
+  kf: 0,
+  flp : 0,
+  tps : {x:0,y:0}, // target position
+  animIntv : 0, // junk from animation system which was deleted to save some kilobytes
+  cs: 1, // simple variable to hold killing/cleaning for a while, if 1 player can press button, if 0 player can't
+  kn : kontra.sprite({
+            x: 0,    
+            y: 0,  
+            width: 96,
+            height: 96,
+            color: 'pink',
+          }), // this is the knife radar, 96x96px
+  rd : kontra.sprite({
+            x: 0,    
+            y: 0,  
+            width: 160,
+            height: 160,
+            color: '#41959a',
+          }), // this is simple box-collider to reveal invisible blocks near player, called rd from radar
+  rev : function() // tiles reveal function, set visibility of tiles to true if player's radar is colliding with these tiles
+  {
+    player.rd.x = player.sprite.x - 64;
+    player.rd.y = player.sprite.y - 64;
+    for(let i =0; i< tileMgr.tiles.length; i++)
+    {
+      if(!tileMgr.visible[i])
+      {
+        if(player.rd.collidesWith(tileMgr.tiles[i]))tileMgr.visible[i] = 1;
+      }
+    }  
+  },
+
+  init : function() // initialize sprite image and sprite
+  {
+    for(let i = 0; i< 4; i++)
+    {
+      player.imgs[i] = new Image;
+      player.imgs[i].src = 's/pl'+i.toString()+'.png';
+    }
+    player.sprite = kontra.sprite({
+          x: 0,       
+          y: 0,  
+          image: player.imgs[0],          
+        });
+        player.rev();
+
+  },
+  smoothM : function()
+  {
+    
+    if(player.sprite.x < player.tps.x)player.sprite.x+=1;    
+    if(player.sprite.x > player.tps.x)player.sprite.x-=1;
+    if(player.sprite.y < player.tps.y)player.sprite.y+=1;
+    if(player.sprite.y > player.tps.y)player.sprite.y-=1;
+    player.sprite.image = player.imgs[player.cf];
+    player.rev();
+    player.kn.x = player.sprite.x - 32;
+    player.kn.y = player.sprite.y - 32;
+     // smooth moving func is used to replace rigid movement(player changes position in one frame) by smooth movement(player is reaching target position step by step)
+     //also reveal func works here and knife radar is placed with orgin in player's position
+  },
+  move : function(dir)
+  {
+    // move function, everything what's going on here is:
+    // checking that new tile id won't be >= 300 and will be >= 0 and then it's increased/decreased depending on player's direction(sent as param)
+    // understanding smooth movement used later:
+    // with this raw move function player is moving to tile on the left/right/up/down, but without smoothing function this will be a superfast position change (+-32px of x/y)
+    // with smoothM function player is reaching target position(current x/y +- 32) step by step in 320ms using setInterval
+    if(!player.kf)
+        {
+            if(dir =='l')
+            {
+                if(player.cId > 0 && tileMgr.tileData[player.cId-1] < 3 && player.sprite.x > 0)
+                {
+                  player.cId--;
+                } 
+                player.cf = 1;
+            }
+            else if(dir =='r')
+            {
+                if(player.cId < tileMgr.tileData.length-1 && tileMgr.tileData[player.cId+1] < 3 && player.sprite.x < 608) player.cId++;
+                player.cf = 0;
+            }
+            if(dir =='u')
+            {
+                if(player.cId - 20 >= 0 && tileMgr.tileData[player.cId-20] < 3) player.cId -= 20;
+                player.cf = 2;
+            }
+            if(dir =='d')
+            {
+                if(player.cId+20 < tileMgr.tileData.length-1 && tileMgr.tileData[player.cId+20] < 3) player.cId += 20;
+                player.cf = 3;
+            }
+            // note why sometimes next tile id is changed of 1 and sometimes of 20 - tilemap is in 20x15
+            //because 640/32 = 20 and 480/32 = 15 so if we want to move player to the down we have to move it to tile 20tiles away from current one
+            if(tileMgr.tileData[player.cId]==0)player.visible=0; else player.visible=1;
+            player.tps.x = tileMgr.tiles[player.cId].x;
+            player.tps.y = tileMgr.tiles[player.cId].y;
+          player.animIntv = setInterval(player.smoothM,10); // here magic is done - interval with smooth move func
+            player.kf = 1;
+            setTimeout(function(){player.kf = 0;clearInterval(player.animIntv);},320); // when smoothM is done clear interval and stop moving
+            // timeout used to unfreeze movement, without this game will be so so so quick and fucked up
+            enMgr.M(); // mechanics like SuperHot, move enemies only when you're moving too
+        }
+  },
+  at : function() // attack function
+  {
+    // check which enemy is in range and then kill it by knife
+    for(let i = 0; i< enMgr.m.length; i++)
+    {
+      let v=enMgr.m[i].id;
+      //if(enMgr.m[i].ak && (Math.abs(player.cf - enMgr.m[i].cf) != 1))
+      if(enMgr.m[i].ak && ((player.sprite.x == enMgr.m[i].sp.x && Math.abs(player.sprite.y-enMgr.m[i].sp.y) == 32)||(player.sprite.y==enMgr.m[i].sp.y && Math.abs(player.sprite.x-enMgr.m[i].sp.x)==32)))
+      {
+        enMgr.m[i].r.width = 0;
+        let br= GetRandomInt(4,24);
+        for(let j = 0; j< br;j++) Abd(enMgr.m[i].sp.x,enMgr.m[i].sp.y,enMgr.m[i].cf) // add random amount of blood units
+        enMgr.m.splice(i,1);
+        
+      }
+    }
+  },
+  cl : function() // clean function
+  {
+    for(let i = 0; i< bd.length; i++)
+    {
+      if(bd[i].sp.collidesWith(player.kn)){
+        bd.splice(i,1);        
+        //if blood unit is in knife's range then you can clean stain
+      }
+    }
+  },
+};
+
+function enemy() // enemy class
+{
+  let t = this; // used to hold some bytes and calling t instead of this - saved about 0.5kb
+  t.imgs = []; // images for sprite renderer
+  t.vsb = 0; // visibility based on current tile visibility
+  t.w = null; // this is sprite of alert, visible only when player/blood is detected
+  t.init = function()
+  {
+    //initialization is the same as player's
+    for(let i = 0; i< 4; i++)
+    {
+      t.imgs[i] = new Image();
+      t.imgs[i].src = 's/en'+i.toString()+'.png';
+    }
+    t.imgs.push(new Image());
+    t.imgs[t.imgs.length-1].src = 's/w.png';
+    t.w = kontra.sprite({x:-400,y:-400,image:t.imgs[4],v:0})
+  }
+  t.init();
+  t.sp = kontra.sprite({
+          x: -32,       
+          y: -32,  
+          image: t.imgs[0],          
+        });
+        t.cf = 0; // currentFrame - cf - describe which sprite is used right now and hold current direction too
+        t.cId = 0; // some variables are the same as player's and destination/usage is the same, like cId. kf for freezing move, tps for target position
+        t.kf= 0;
+        t.id = 0;
+        t.flp = 0;
+        t.tps = {x:0,y:0};
+        t.animIntv = 0;
+        t.p = []; // path pattern exported by my editor
+        t.cpi = 0; //current path pattern id
+        t.invm = 0; //invert move -- not used as designed cause animations are deleted
+        t.mIv = 0; //inverval for movement
+        t.ak = 0; // can be killed by knife?
+        t.r = kontra.sprite({
+          x: -480,       
+          y: -480,  
+          width: 160,
+          height: 160,
+          color: 'blue',
+        }); // ^ and most important thing - radar for detecting blood
+        t.cs = 1;
+  
+  t.smoothM = function()
+  {
+    if(t.sp.x < t.tps.x)
+    {
+      t.sp.x+=1;
+      t.cf = 0;
+    }    
+    if(t.sp.x > t.tps.x)
+    {
+      t.sp.x-=1;
+      t.cf = 1;
+    }
+    if(t.sp.y < t.tps.y)
+    {
+      t.sp.y+=1;
+      t.cf = 3;
+    }
+    if(t.sp.y > t.tps.y)
+    {
+      t.sp.y-=1;
+      t.cf = 2;
+      
+    }
+    //smooth movement the same as player's - transform current position to target position in linear transformation, because movement is only in one direction in time
+    t.w.x = t.sp.x +8; t.w.y = t.sp.y -24;
+    
+    t.sp.image = t.imgs[t.cf];
+    if(t.cf == 0){ t.r.x = t.sp.x; t.r.y = t.sp.y-64}
+    if(t.cf == 1){ t.r.x = t.sp.x-128; t.r.y = t.sp.y-64}
+    if(t.cf == 2){ t.r.x = t.sp.x-64; t.r.y = t.sp.y-128}
+    if(t.cf == 3){ t.r.x = t.sp.x-64; t.r.y = t.sp.y}
+   // place radar in position depending on direction
+    
+    for(let j = 0; j< bd.length; j++)
+    {
+      if(t.r.collidesWith(bd[j].sp)) {
+        if(t.w.v == 0){t.w.v = 1;t.vsb=1;setTimeout(function(){gS = 1;levelMgr.lN(P,1);levelMgr.rs = 0},4000);setTimeout(function(){ad(1);gS = 2;},1500);} 
+      }
+    }//detect blood in radar's range and if detected - call failed screen and restart level
+  },
+
+  t.M = function()
+  {
+    //movement function
+    let tcp = t.cpi;
+
+    
+    if(!t.invm)
+    {
+      if(t.cpi < t.p.length-1)t.cpi++; 
+      else t.invm = 1;
+    }
+    if(t.invm)
+    {
+      if(t.cpi > 0) t.cpi--;
+      else t.invm = 0;
+    }
+    if(tileMgr.visible[t.p[t.cpi]])t.vsb = 1;
+    else t.vsb = 0; if(t.w.v)t.vsb=1;
+    t.tps.x = tileMgr.tiles[t.p[t.cpi]].x;
+    t.tps.y = tileMgr.tiles[t.p[t.cpi]].y;
+    t.mIv = setInterval(() => t.smoothM(),10);
+    let that = t.mIv;
+    setTimeout(function(){clearInterval(that);},320);
+  if(tileMgr.tiles[t.p[tcp]].x < tileMgr.tiles[t.p[t.cpi]].x) t.flp = 0;
+  else if(tileMgr.tiles[t.p[tcp]].x > tileMgr.tiles[t.p[t.cpi]].x) t.flp = 2;
+  }
+}; 
+let enm = new enemy();
+let enMgr = { // object used to hold enemies and their settings 
+  m : [], // ene[m]ies array for enemy() objects
+  id : 0,
+  // path patterns for enemies:
+  // format is [[startingX,startingY,tile0,tile1,tile2,....]], -- this is level one and next array of arrays is for level 2 etc.
+  setups : [
+    [
+    [288, 96, 69, 69, 69, 69, 68, 67, 66, 65, 64, 63, 62, 61, 81, 101, 102, 122, 122, 122],[352, 96, 71, 70, 70, 70, 71, 72, 92, 93, 94, 95, 115, 135, 136, 137, 138, 118, 98, 78, 77, 76, 56],[416, 384, 253, 254, 274, 294, 295, 296, 297, 298, 278, 258, 238, 218, 198, 197, 196, 176, 176, 196, 195, 194, 214, 234],[160, 320, 205, 205, 205, 205, 204, 203, 223, 243, 244, 245, 246, 247, 248, 249, 249, 249, 250, 250, 250]
+    ],//level 1 enemies setup
+    [
+    [544, 32, 37, 37, 37, 37, 36, 35, 55, 75, 76, 96, 97, 97, 97, 96, 116, 136, 137, 138, 138, 138],
+    [128, 128, 84, 104, 104, 104, 84, 64, 64],
+    [256, 96, 68, 69, 70, 71, 91, 111, 110, 130, 150, 150, 150, 149, 129, 109, 108, 88, 68],
+    [416, 288, 193, 194, 195, 196, 197, 198, 218, 238, 258, 278, 277, 276, 275, 274, 273, 253, 233, 213, 193],
+    [32, 320, 201, 221, 241, 261, 281, 282, 283, 284, 285, 286, 287, 288, 288, 288, 287, 286, 266, 246, 226, 225, 205, 204, 203, 202, 201]
+    ],//level2
+    [
+    [320, 32, 30, 31, 32, 33, 34, 35, 35, 35, 55, 54, 53, 52, 51, 50, 50],[288, 192, 129, 130, 131, 111, 91, 71, 70, 69, 89, 109, 129, 129, 129, 129],
+[480, 224, 155, 154, 153, 152, 151, 150, 149, 148, 147, 146, 146, 146],[128, 128, 84, 85, 105, 125, 145, 165, 185, 184, 183, 163, 143, 123, 124, 104, 103],
+[224, 288, 187, 207, 227, 247, 267, 266, 265, 245, 225, 205, 185, 165, 166, 167, 167],[384, 352, 232, 232, 232, 231, 230, 230, 230, 229, 228, 228, 228]
+    ],//level3
+  ],
+
+  add : function() // add enemy at start of level
+  {
+    for(let a = 0; a< enMgr.setups[levelMgr.c].length; a++)
+    {
+      enMgr.id = a;
+      enMgr.m[enMgr.id] = new enemy();
+      enMgr.m[enMgr.id].init();
+      enMgr.m[enMgr.id].sp.x = enMgr.setups[levelMgr.c][enMgr.id][0];
+      enMgr.m[enMgr.id].sp.y = enMgr.setups[levelMgr.c][enMgr.id][1]; // get coords from setups
+      for(let i = 2; i<enMgr.setups[levelMgr.c][enMgr.id].length; i++)
+      {
+        enMgr.m[enMgr.id].p[i-2] = enMgr.setups[levelMgr.c][enMgr.id][i]; // fill path pattern with data from setups
+      }
+    }  
+  },
+  M : function()
+  {
+    for(let i = 0; i<enMgr.m.length; i++) enMgr.m[i].M(); // just move all enemies
+  },
+  render : function()
+  {
+    //draw sprites and - if visible - simple emoji cloud(as alert)
+    for(let i = 0; i<enMgr.m.length; i++)
+      {
+        if(enMgr.m[i].vsb){enMgr.m[i].sp.render();  
+        if(enMgr.m[i].w.v) enMgr.m[i].w.render();
+          if(enMgr.m[i].r.collidesWith(player.sprite) && player.visible){
+            enMgr.m[i].w.v = 1;
+           if(!levelMgr.rs){levelMgr.rs = 1;setTimeout(function(){gS = 1;levelMgr.lN(player,1);levelMgr.rs = 0},4000);setTimeout(function(){gS = 2;ad(1)},1000);} 
+           // detect player in real time
+    } 
+    }
+      }
+  }
+}
+
+var loop = kontra.gameLoop({ 
+  update() {       
+    if(gS == 1)
+    { // gameplay state - update movement and gameplay elements
+        if (kontra.keys.pressed('a') && !kontra.keys.pressed('p')) {
+            player.move('l');
+          }
+        else if (kontra.keys.pressed('d') && !kontra.keys.pressed('p')) {
+          player.move('r');
+        }
+        else if (kontra.keys.pressed('w') && !kontra.keys.pressed('p')) {
+          player.move('u');
+        }
+        else if (kontra.keys.pressed('s') && !kontra.keys.pressed('p')) {
+          player.move('d');
+        }
+        else if (kontra.keys.pressed('p') &&player.cs){
+          player.cl();
+          enMgr.M();
+          player.cs = 0;
+          setTimeout(function(){player.cs = 1},500)
+          // clean blood on floor
+        }
+        else if (kontra.keys.pressed('l') &&player.cs) {
+          player.at();
+          player.cs = 0;
+          setTimeout(function(){player.cs = 1},500)
+          //kill enemy in range
+        }
+          for(let i = 0; i< enMgr.m.length; i++)
+          {
+            if(enMgr.m[i].sp.collidesWith(player.kn)){
+              enMgr.m[i].ak = 1;
+            }else enMgr.m[i].ak = 0; // check if enemy is in knife range and flag him as rady-to-kill(ak variable)
+        }
+
+        if(player.sprite.x == levelMgr.a.x && player.sprite.y == levelMgr.a.y && levelMgr.f < 1)
+        {
+          if(levelMgr.c < levelMgr.levels.length-1){levelMgr.f = 1;levelMgr.nv = setTimeout(function(){levelMgr.lN(player,0);levelMgr.f=0;},2000);}
+          else{levelMgr.f = 2;levelMgr.nv = setTimeout(function(){gS = 4; ad(0);},2000);}
+        }// detect if player reached antenna sprite and if yes, load next level
+    }
+    if(gS == 0)
+    {
+      if (kontra.keys.pressed('space')) gS = 1; // go to gameplay state
+    }
+   
+
+  },
+  render() {      
+    // render divided to gameStates
+    if(gS == 1)
+    {
+      tileMgr.R();
+    for(let i = 0; i<bd.length; i++){bd[i].sp.render(); bd[i].u(); }      
+    player.sprite.render(); 
+    enMgr.render();
+    levelMgr.a.render();
+    // render gameplay elements
+    }
+    else if(gS == 0){
+      ss.render();
+      //render splash screen
+    }
+    else if(gS == 2)fs.render();    // render failed screen
+    else if(gS == 4)ms.render(); // render end screen
+    
+   
+  }
+});
+
+// initialie first level, player and start game
+tileMgr.fill();
+player.init();
+loop.start();    
+//simple js music player thanks fo @xem
+// https://github.com/xem/miniMusic
+// a bit modified output to handle more than one music in function
+var cp=0;function ad(n){if(cp||n==0){D=[[13,,8,10,,13,,13,15,,,,13,,10,8,,13,,13,15,,15,,13,,10,8,10,13,,13,10,,,10,8,,13,10,8,10,8,,8,10,13,15,,15,,13],[25,,21,,20,19]];with(new AudioContext)
+with(G=createGain())
+for(i in D[n])
+with(createOscillator())
+if(D[n][i])
+connect(G),G.connect(destination),start(i*.2),frequency.setValueAtTime(90*1.06**(13-D[n][i]),i*.2),type='square',gain.setValueAtTime(0.35,i*.2),gain.setTargetAtTime(.0001,i*.2+.18,.005),stop(i*.2+.19)}}ad(0);setTimeout(function(){cp=1},15000)
+
+</script>
+</body>
+</html>
